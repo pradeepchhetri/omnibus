@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2014 Chef Software, Inc.
+# Copyright 2015 Chef Software, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,15 +31,12 @@ module Omnibus
     end
 
     #
-    # The project to healthcheck.
+    # The project to create licenses for.
     #
     # @return [Project]
     #
     attr_reader :project
 
-    #
-    # Creates the license files for given project.
-    # It is assumed that the project has already been built.
     #
     # @param [Project] project
     #   the project to create licenses for.
@@ -50,6 +47,7 @@ module Omnibus
 
     #
     # Creates the license files for given project.
+    # It is assumed that the project has already been built.
     #
     def create!
       prepare
@@ -66,7 +64,11 @@ module Omnibus
     end
 
     #
-    # Creates the top level license file(s) for the project.
+    # Creates the top level license file for the project.
+    # Top level file is created at #{project.license_file_path}
+    # and contains the name of the project, version of the project,
+    # text of the license of the project and a summary of the Licenses
+    # of the included software components.
     #
     def create_project_license_file
       File.open(project.license_file_path, 'w') do |f|
@@ -105,6 +107,13 @@ module Omnibus
 
     #
     # Summary of the licenses included by the softwares of the project.
+    # It is in the form of:
+    # ...
+    # This product bundles python 2.7.9,
+    # which is available under a "Python" License.
+    # For details, see:
+    # /opt/opscode/LICENSES/python-LICENSE
+    # ...
     #
     def components_license_summary
       out = "\n\n"
@@ -128,7 +137,18 @@ module Omnibus
 
     #
     # Map that collects information about the licenses of the softwares
-    # included in the project.
+    # included in the project. E.g:
+    # {
+    #   ...
+    #   "python" => {
+    #     "license" => "Python",
+    #     "license_files" => "LICENSE",
+    #     "version" => "2.7.9",
+    #     "project_dir" => "/var/cache/omnibus/src/python/Python-2.7.9/"
+    #   },
+    #   ...
+    # }
+    #
     #
     def license_map
       @license_map ||= begin
@@ -155,6 +175,8 @@ module Omnibus
 
     #
     # Returns the location where the license file should reside in the package.
+    # License file is named as <project_name>-<license_file_name> and created
+    # under the output licenses directory.
     #
     def license_package_location(component_name, where)
       if is_local(where)

@@ -721,7 +721,7 @@ module Omnibus
     #   license_file 'LICENSES/artistic.txt'
     #
     # @param [String] val
-    #   the location of the license file for the software.
+    #   the location of the license file for the project.
     #
     # @return [String]
     #
@@ -735,7 +735,9 @@ module Omnibus
     expose :license_file
 
     #
-    # Location of LICENSE file containing external software licenses.
+    # Location of license file that omnibus will create and that will contain
+    # the information about the license of the project plus the details about
+    # the licenses of the software components included in the project.
     #
     # If no path is specified  install_dir/LICENSE is used.
     #
@@ -905,17 +907,6 @@ module Omnibus
     #
     def overrides
       @overrides ||= {}
-    end
-
-    #
-    # The list of license files for this project
-    #
-    # @see #license_file
-    #
-    # @return [Array<String>]
-    #
-    def license_files
-      @license_files ||= []
     end
 
     #
