@@ -100,23 +100,6 @@ module Omnibus
       end
     end
 
-    def license_map
-      @components.reduce({}) do |map, component|
-        ## Components without a version are
-        ## pieces of the omnibus project
-        ## itself, and so don't have a separate license
-        if component.default_version
-          map[component.name] = {
-            license: component.license,
-            license_files: component.license_files,
-            version: component.version,
-            project_dir: component.project_dir,
-          }
-        end
-        map
-      end
-    end
-
     def each(&block)
       @components.each(&block)
     end

@@ -20,7 +20,6 @@ require 'json'
 require 'omnibus/manifest'
 require 'omnibus/manifest_entry'
 require 'omnibus/reports'
-require 'omnibus/licenses'
 
 module Omnibus
   class Project
@@ -721,17 +720,14 @@ module Omnibus
     # @example
     #   license_file 'LICENSES/artistic.txt'
     #
-    # @param [String] val
+    # @param [String] file
     #   the location of the license file for the software.
     #
     # @return [String]
     #
-    def license_file(val = NULL)
-      if null?(val)
-        @license_file
-      else
-        @license_file = val
-      end
+    def license_file(file)
+      license_files << file
+      license_files.dup
     end
     expose :license_file
 
@@ -774,25 +770,6 @@ module Omnibus
       end
     end
     expose :text_manifest_path
-
-    #
-    # Location of LICENSE file containing external software licenses.
-    #
-    # If no path is specified +install_dir+/LICENSE is used.
-    #
-    # @example
-    #   license_file_path
-    #
-    # @return [String]
-    #
-    def license_file_path(path = NULL)
-      if null?(path)
-        @license_file_path || File.join(install_dir, "LICENSE")
-      else
-        @license_file_path = path
-      end
-    end
-    expose :license_file_path
 
     #
     # @!endgroup
@@ -906,6 +883,17 @@ module Omnibus
     #
     def overrides
       @overrides ||= {}
+    end
+
+    #
+    # The list of license files for this project
+    #
+    # @see #license_file
+    #
+    # @return [Array<String>]
+    #
+    def license_files
+      @license_files ||= []
     end
 
     #
@@ -1046,7 +1034,7 @@ module Omnibus
     #
     def built_manifest
       log.info(log_key) { "Building version manifest" }
-      m = Omnibus::Manifest.new(build_version, build_git_revision)
+      m = Omnibus::Manifest.new(build_version, build_git_revision, license)
       softwares.each do |software|
         m.add(software.name, software.manifest_entry)
       end
@@ -1071,7 +1059,7 @@ module Omnibus
 
       write_json_manifest
       write_text_manifest
-      write_license_files
+      Licenses.write!(self)
       HealthCheck.run!(self)
       package_me
       compress_me
@@ -1093,55 +1081,6 @@ module Omnibus
         f.puts "#{name} #{build_version}"
         f.puts ""
         f.puts Omnibus::Reports.pretty_version_map(self)
-      end
-    end
-
-    #
-    # Writes out all the various license related files - Top level
-    # license file and also copies any package specific license
-    # files into the package
-    #
-    def write_license_files
-      copy_license_files
-      write_license_file
-    end
-
-    def write_license_file
-      File.open(license_file_path, 'w') do |f|
-        f.puts "#{name} #{build_version}"
-        f.puts ""
-        f.puts license_text
-        f.puts ""
-        f.puts Omnibus::Licenses.license_list(self)
-      end
-    end
-
-    def copy_license_files
-      license_dir = File.expand_path(Omnibus::Licenses.output_dir, install_dir)
-
-      FileUtils.mkdir_p(license_dir)
-      library.license_map.each do |name, values|
-        license_files = values[:license_files]
-        license_files.each do |license_file|
-          if license_file && is_local(license_file)
-            input_file = File.expand_path(license_file, values[:project_dir])
-            output_file = File.expand_path(Omnibus::Licenses.location(name, license_file), install_dir)
-            FileUtils.cp(input_file, output_file)
-          end
-        end
-      end
-    end
-
-    def is_local(license)
-      u = URI(license)
-      return u.scheme.nil?
-    end
-
-    def license_text
-      if license_file
-        IO.read(license_file)
-      else
-        ""
       end
     end
 

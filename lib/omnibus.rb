@@ -62,6 +62,7 @@ module Omnibus
   autoload :Templating,       'omnibus/templating'
   autoload :ThreadPool,       'omnibus/thread_pool'
   autoload :Util,             'omnibus/util'
+  autoload :Licenses,         'omnibus/licenses'
 
   autoload :GitFetcher,  'omnibus/fetchers/git_fetcher'
   autoload :NetFetcher,  'omnibus/fetchers/net_fetcher'
