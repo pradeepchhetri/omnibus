@@ -720,16 +720,38 @@ module Omnibus
     # @example
     #   license_file 'LICENSES/artistic.txt'
     #
-    # @param [String] file
+    # @param [String] val
     #   the location of the license file for the software.
     #
     # @return [String]
     #
-    def license_file(file)
-      license_files << file
-      license_files.dup
+    def license_file(val = NULL)
+      if null?(val)
+        @license_file
+      else
+        @license_file = val
+      end
     end
     expose :license_file
+
+    #
+    # Location of LICENSE file containing external software licenses.
+    #
+    # If no path is specified  install_dir/LICENSE is used.
+    #
+    # @example
+    #   license_file_path
+    #
+    # @return [String]
+    #
+    def license_file_path(path = NULL)
+      if null?(path)
+        @license_file_path || File.join(install_dir, "LICENSE")
+      else
+        @license_file_path = path
+      end
+    end
+    expose :license_file_path
 
     #
     # Location of json-formated version manifest, written at at the
@@ -1059,7 +1081,7 @@ module Omnibus
 
       write_json_manifest
       write_text_manifest
-      Licenses.write!(self)
+      Licenses.create!(self)
       HealthCheck.run!(self)
       package_me
       compress_me
